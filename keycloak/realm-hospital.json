@@ -1,0 +1,304 @@
+{
+  "id": "hospital",
+  "realm": "hospital",
+  "displayName": "Hospital - Sistema de Gerenciamento",
+  "displayNameHtml": "<div class=\"kc-logo-text\"><span>Hospital</span></div>",
+  "enabled": true,
+  "sslRequired": "none",
+  "registrationAllowed": false,
+  "loginWithEmailAllowed": true,
+  "duplicateEmailsAllowed": false,
+  "resetPasswordAllowed": true,
+  "editUsernameAllowed": false,
+  "bruteForceProtected": true,
+  "permanentLockout": false,
+  "maxFailureWaitSeconds": 900,
+  "minimumQuickLoginWaitSeconds": 60,
+  "waitIncrementSeconds": 60,
+  "quickLoginCheckMilliSeconds": 1000,
+  "maxDeltaTimeSeconds": 43200,
+  "failureFactor": 5,
+  "defaultSignatureAlgorithm": "RS256",
+  "offlineSessionMaxLifespanEnabled": false,
+  "offlineSessionMaxLifespan": 5184000,
+  "accessTokenLifespan": 3600,
+  "accessTokenLifespanForImplicitFlow": 900,
+  "ssoSessionIdleTimeout": 1800,
+  "ssoSessionMaxLifespan": 36000,
+  "roles": {
+    "realm": [
+      {
+        "name": "USUARIO",
+        "description": "Usuário comum - pode agendar consultas e exames",
+        "composite": false,
+        "clientRole": false
+      },
+      {
+        "name": "MEDICO",
+        "description": "Médico - pode atender consultas e solicitar exames",
+        "composite": false,
+        "clientRole": false
+      },
+      {
+        "name": "ADMIN",
+        "description": "Administrador - acesso total ao sistema",
+        "composite": false,
+        "clientRole": false
+      }
+    ]
+  },
+  "clients": [
+    {
+      "clientId": "agendamento-service",
+      "name": "Serviço de Agendamento",
+      "description": "Microsserviço de agendamento de consultas e exames",
+      "enabled": true,
+      "clientAuthenticatorType": "client-secret",
+      "secret": "agendamento-secret-key-2024",
+      "redirectUris": ["*"],
+      "webOrigins": ["*"],
+      "bearerOnly": false,
+      "consentRequired": false,
+      "standardFlowEnabled": true,
+      "implicitFlowEnabled": false,
+      "directAccessGrantsEnabled": true,
+      "serviceAccountsEnabled": true,
+      "publicClient": false,
+      "frontchannelLogout": false,
+      "protocol": "openid-connect",
+      "attributes": {
+        "access.token.lifespan": "3600"
+      },
+      "fullScopeAllowed": true,
+      "nodeReRegistrationTimeout": -1,
+      "protocolMappers": [
+        {
+          "name": "roles",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-usermodel-realm-role-mapper",
+          "consentRequired": false,
+          "config": {
+            "multivalued": "true",
+            "userinfo.token.claim": "true",
+            "id.token.claim": "true",
+            "access.token.claim": "true",
+            "claim.name": "realm_access.roles",
+            "jsonType.label": "String"
+          }
+        }
+      ]
+    },
+    {
+      "clientId": "clinica-service",
+      "name": "Serviço de Clínica",
+      "description": "Microsserviço de atendimento clínico",
+      "enabled": true,
+      "clientAuthenticatorType": "client-secret",
+      "secret": "clinica-secret-key-2024",
+      "redirectUris": ["*"],
+      "webOrigins": ["*"],
+      "bearerOnly": false,
+      "consentRequired": false,
+      "standardFlowEnabled": true,
+      "implicitFlowEnabled": false,
+      "directAccessGrantsEnabled": true,
+      "serviceAccountsEnabled": true,
+      "publicClient": false,
+      "frontchannelLogout": false,
+      "protocol": "openid-connect",
+      "attributes": {
+        "access.token.lifespan": "3600"
+      },
+      "fullScopeAllowed": true,
+      "nodeReRegistrationTimeout": -1,
+      "protocolMappers": [
+        {
+          "name": "roles",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-usermodel-realm-role-mapper",
+          "consentRequired": false,
+          "config": {
+            "multivalued": "true",
+            "userinfo.token.claim": "true",
+            "id.token.claim": "true",
+            "access.token.claim": "true",
+            "claim.name": "realm_access.roles",
+            "jsonType.label": "String"
+          }
+        }
+      ]
+    },
+    {
+      "clientId": "centro-cirurgico-service",
+      "name": "Serviço de Centro Cirúrgico",
+      "description": "Microsserviço de centro cirúrgico e procedimentos",
+      "enabled": true,
+      "clientAuthenticatorType": "client-secret",
+      "secret": "centro-cirurgico-secret-key-2024",
+      "redirectUris": ["*"],
+      "webOrigins": ["*"],
+      "bearerOnly": false,
+      "consentRequired": false,
+      "standardFlowEnabled": true,
+      "implicitFlowEnabled": false,
+      "directAccessGrantsEnabled": true,
+      "serviceAccountsEnabled": true,
+      "publicClient": false,
+      "frontchannelLogout": false,
+      "protocol": "openid-connect",
+      "attributes": {
+        "access.token.lifespan": "3600"
+      },
+      "fullScopeAllowed": true,
+      "nodeReRegistrationTimeout": -1,
+      "protocolMappers": [
+        {
+          "name": "roles",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-usermodel-realm-role-mapper",
+          "consentRequired": false,
+          "config": {
+            "multivalued": "true",
+            "userinfo.token.claim": "true",
+            "id.token.claim": "true",
+            "access.token.claim": "true",
+            "claim.name": "realm_access.roles",
+            "jsonType.label": "String"
+          }
+        }
+      ]
+    },
+    {
+      "clientId": "gateway-service",
+      "name": "Gateway Service",
+      "description": "API Gateway - ponto de entrada do sistema",
+      "enabled": true,
+      "clientAuthenticatorType": "client-secret",
+      "secret": "gateway-secret-key-2024",
+      "redirectUris": ["*"],
+      "webOrigins": ["*"],
+      "bearerOnly": false,
+      "consentRequired": false,
+      "standardFlowEnabled": true,
+      "implicitFlowEnabled": false,
+      "directAccessGrantsEnabled": true,
+      "serviceAccountsEnabled": true,
+      "publicClient": false,
+      "frontchannelLogout": false,
+      "protocol": "openid-connect",
+      "attributes": {
+        "access.token.lifespan": "3600"
+      },
+      "fullScopeAllowed": true,
+      "nodeReRegistrationTimeout": -1,
+      "protocolMappers": [
+        {
+          "name": "roles",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-usermodel-realm-role-mapper",
+          "consentRequired": false,
+          "config": {
+            "multivalued": "true",
+            "userinfo.token.claim": "true",
+            "id.token.claim": "true",
+            "access.token.claim": "true",
+            "claim.name": "realm_access.roles",
+            "jsonType.label": "String"
+          }
+        }
+      ]
+    }
+  ],
+  "users": [
+    {
+      "username": "paciente1",
+      "enabled": true,
+      "emailVerified": true,
+      "firstName": "Maria",
+      "lastName": "Silva",
+      "email": "maria.silva@hospital.com",
+      "credentials": [
+        {
+          "type": "password",
+          "value": "senha123",
+          "temporary": false
+        }
+      ],
+      "realmRoles": ["USUARIO"],
+      "clientRoles": {},
+      "groups": []
+    },
+    {
+      "username": "paciente2",
+      "enabled": true,
+      "emailVerified": true,
+      "firstName": "João",
+      "lastName": "Santos",
+      "email": "joao.santos@hospital.com",
+      "credentials": [
+        {
+          "type": "password",
+          "value": "senha123",
+          "temporary": false
+        }
+      ],
+      "realmRoles": ["USUARIO"],
+      "clientRoles": {},
+      "groups": []
+    },
+    {
+      "username": "medico1",
+      "enabled": true,
+      "emailVerified": true,
+      "firstName": "Dr. Carlos",
+      "lastName": "Oliveira",
+      "email": "carlos.oliveira@hospital.com",
+      "credentials": [
+        {
+          "type": "password",
+          "value": "senha123",
+          "temporary": false
+        }
+      ],
+      "realmRoles": ["MEDICO", "USUARIO"],
+      "clientRoles": {},
+      "groups": []
+    },
+    {
+      "username": "medico2",
+      "enabled": true,
+      "emailVerified": true,
+      "firstName": "Dra. Ana",
+      "lastName": "Costa",
+      "email": "ana.costa@hospital.com",
+      "credentials": [
+        {
+          "type": "password",
+          "value": "senha123",
+          "temporary": false
+        }
+      ],
+      "realmRoles": ["MEDICO", "USUARIO"],
+      "clientRoles": {},
+      "groups": []
+    },
+    {
+      "username": "admin1",
+      "enabled": true,
+      "emailVerified": true,
+      "firstName": "Administrador",
+      "lastName": "Sistema",
+      "email": "admin@hospital.com",
+      "credentials": [
+        {
+          "type": "password",
+          "value": "admin123",
+          "temporary": false
+        }
+      ],
+      "realmRoles": ["ADMIN", "MEDICO", "USUARIO"],
+      "clientRoles": {},
+      "groups": []
+    }
+  ]
+}
