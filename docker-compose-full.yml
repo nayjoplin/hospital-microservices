@@ -1,0 +1,294 @@
+version: '3.8'
+
+# Sistema de Gerenciamento Hospitalar - Microsserviços
+# Docker Compose com TODOS os serviços e infraestrutura
+
+services:
+  # ============================================
+  # BANCOS DE DADOS MYSQL
+  # ============================================
+  
+  # MySQL para Serviço de Agendamento
+  mysql-agendamento:
+    image: mysql:8.0
+    container_name: mysql-agendamento
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: agendamento_db
+      MYSQL_CHARACTER_SET_SERVER: utf8mb4
+      MYSQL_COLLATION_SERVER: utf8mb4_unicode_ci
+    ports:
+      - "3307:3306"
+    volumes:
+      - mysql-agendamento-data:/var/lib/mysql
+    networks:
+      - hospital-network
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-proot"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    restart: unless-stopped
+
+  # MySQL para Serviço de Clínica
+  mysql-clinica:
+    image: mysql:8.0
+    container_name: mysql-clinica
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: clinica_db
+      MYSQL_CHARACTER_SET_SERVER: utf8mb4
+      MYSQL_COLLATION_SERVER: utf8mb4_unicode_ci
+    ports:
+      - "3308:3306"
+    volumes:
+      - mysql-clinica-data:/var/lib/mysql
+    networks:
+      - hospital-network
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-proot"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    restart: unless-stopped
+
+  # MySQL para Serviço de Centro Cirúrgico
+  mysql-centro-cirurgico:
+    image: mysql:8.0
+    container_name: mysql-centro-cirurgico
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: centro_cirurgico_db
+      MYSQL_CHARACTER_SET_SERVER: utf8mb4
+      MYSQL_COLLATION_SERVER: utf8mb4_unicode_ci
+    ports:
+      - "3309:3306"
+    volumes:
+      - mysql-centro-cirurgico-data:/var/lib/mysql
+    networks:
+      - hospital-network
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-proot"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    restart: unless-stopped
+
+  # MySQL para Keycloak
+  mysql-keycloak:
+    image: mysql:8.0
+    container_name: mysql-keycloak
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: keycloak
+      MYSQL_CHARACTER_SET_SERVER: utf8mb4
+      MYSQL_COLLATION_SERVER: utf8mb4_unicode_ci
+    ports:
+      - "3310:3306"
+    volumes:
+      - mysql-keycloak-data:/var/lib/mysql
+    networks:
+      - hospital-network
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-proot"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    restart: unless-stopped
+
+  # ============================================
+  # RABBITMQ (MENSAGERIA)
+  # ============================================
+  
+  rabbitmq:
+    image: rabbitmq:3.12-management-alpine
+    container_name: rabbitmq
+    environment:
+      RABBITMQ_DEFAULT_USER: guest
+      RABBITMQ_DEFAULT_PASS: guest
+      RABBITMQ_DEFAULT_VHOST: /
+    ports:
+      - "5672:5672"   # AMQP
+      - "15672:15672" # Management UI
+    volumes:
+      - rabbitmq-data:/var/lib/rabbitmq
+    networks:
+      - hospital-network
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 40s
+    restart: unless-stopped
+
+  # ============================================
+  # KEYCLOAK (AUTENTICAÇÃO)
+  # ============================================
+  
+  keycloak:
+    image: quay.io/keycloak/keycloak:23.0
+    container_name: keycloak
+    environment:
+      KEYCLOAK_ADMIN: admin
+      KEYCLOAK_ADMIN_PASSWORD: admin
+      KC_DB: mysql
+      KC_DB_URL: jdbc:mysql://mysql-keycloak:3306/keycloak
+      KC_DB_USERNAME: root
+      KC_DB_PASSWORD: root
+      KC_HOSTNAME: localhost
+      KC_HTTP_PORT: 8090
+      KC_HEALTH_ENABLED: 'true'
+      KC_METRICS_ENABLED: 'true'
+    ports:
+      - "8090:8090"
+    command: 
+      - start-dev
+      - --http-port=8090
+    depends_on:
+      mysql-keycloak:
+        condition: service_healthy
+    networks:
+      - hospital-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8090/health/ready"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+    restart: unless-stopped
+
+  # ============================================
+  # MICROSSERVIÇOS (Opcional - Descomentar para usar)
+  # ============================================
+  # Para build local, descomente as seções abaixo
+  # Para desenvolvimento, execute com: mvn spring-boot:run
+  
+  # Serviço de Agendamento
+  # agendamento-service:
+  #   build:
+  #     context: ./agendamento-service
+  #     dockerfile: Dockerfile
+  #   container_name: agendamento-service
+  #   environment:
+  #     SPRING_DATASOURCE_URL: jdbc:mysql://mysql-agendamento:3306/agendamento_db?createDatabaseIfNotExist=true
+  #     SPRING_DATASOURCE_USERNAME: root
+  #     SPRING_DATASOURCE_PASSWORD: root
+  #     SPRING_RABBITMQ_HOST: rabbitmq
+  #     SPRING_RABBITMQ_PORT: 5672
+  #     SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI: http://keycloak:8090/realms/hospital
+  #     SERVICE_CLINICA_URL: http://clinica-service:8082
+  #     SERVICE_CENTRO_CIRURGICO_URL: http://centro-cirurgico-service:8083
+  #   ports:
+  #     - "8081:8081"
+  #   depends_on:
+  #     mysql-agendamento:
+  #       condition: service_healthy
+  #     rabbitmq:
+  #       condition: service_healthy
+  #     keycloak:
+  #       condition: service_healthy
+  #   networks:
+  #     - hospital-network
+  #   restart: unless-stopped
+
+  # Serviço de Clínica
+  # clinica-service:
+  #   build:
+  #     context: ./clinica-service
+  #     dockerfile: Dockerfile
+  #   container_name: clinica-service
+  #   environment:
+  #     SPRING_DATASOURCE_URL: jdbc:mysql://mysql-clinica:3306/clinica_db?createDatabaseIfNotExist=true
+  #     SPRING_DATASOURCE_USERNAME: root
+  #     SPRING_DATASOURCE_PASSWORD: root
+  #     SPRING_RABBITMQ_HOST: rabbitmq
+  #     SPRING_RABBITMQ_PORT: 5672
+  #     SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI: http://keycloak:8090/realms/hospital
+  #     SERVICE_CENTRO_CIRURGICO_URL: http://centro-cirurgico-service:8083
+  #   ports:
+  #     - "8082:8082"
+  #   depends_on:
+  #     mysql-clinica:
+  #       condition: service_healthy
+  #     rabbitmq:
+  #       condition: service_healthy
+  #     keycloak:
+  #       condition: service_healthy
+  #   networks:
+  #     - hospital-network
+  #   restart: unless-stopped
+
+  # Serviço de Centro Cirúrgico
+  # centro-cirurgico-service:
+  #   build:
+  #     context: ./centro-cirurgico-service
+  #     dockerfile: Dockerfile
+  #   container_name: centro-cirurgico-service
+  #   environment:
+  #     SPRING_DATASOURCE_URL: jdbc:mysql://mysql-centro-cirurgico:3306/centro_cirurgico_db?createDatabaseIfNotExist=true
+  #     SPRING_DATASOURCE_USERNAME: root
+  #     SPRING_DATASOURCE_PASSWORD: root
+  #     SPRING_RABBITMQ_HOST: rabbitmq
+  #     SPRING_RABBITMQ_PORT: 5672
+  #     SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI: http://keycloak:8090/realms/hospital
+  #   ports:
+  #     - "8083:8083"
+  #   depends_on:
+  #     mysql-centro-cirurgico:
+  #       condition: service_healthy
+  #     rabbitmq:
+  #       condition: service_healthy
+  #     keycloak:
+  #       condition: service_healthy
+  #   networks:
+  #     - hospital-network
+  #   restart: unless-stopped
+
+  # API Gateway
+  # gateway-service:
+  #   build:
+  #     context: ./gateway-service
+  #     dockerfile: Dockerfile
+  #   container_name: gateway-service
+  #   environment:
+  #     SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI: http://keycloak:8090/realms/hospital
+  #   ports:
+  #     - "8080:8080"
+  #   depends_on:
+  #     - agendamento-service
+  #     - clinica-service
+  #     - centro-cirurgico-service
+  #     - keycloak
+  #   networks:
+  #     - hospital-network
+  #   restart: unless-stopped
+
+# ============================================
+# NETWORKS
+# ============================================
+
+networks:
+  hospital-network:
+    driver: bridge
+    name: hospital-network
+
+# ============================================
+# VOLUMES
+# ============================================
+
+volumes:
+  mysql-agendamento-data:
+    name: hospital-mysql-agendamento
+  mysql-clinica-data:
+    name: hospital-mysql-clinica
+  mysql-centro-cirurgico-data:
+    name: hospital-mysql-centro-cirurgico
+  mysql-keycloak-data:
+    name: hospital-mysql-keycloak
+  rabbitmq-data:
+    name: hospital-rabbitmq
